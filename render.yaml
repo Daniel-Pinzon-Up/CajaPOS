@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: cajapos
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
