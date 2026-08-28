@@ -117,15 +117,31 @@ def init_db():
                     id SERIAL PRIMARY KEY, order_id INTEGER NOT NULL REFERENCES pending_orders(id) ON DELETE CASCADE,
                     product_id INTEGER NOT NULL, product_name VARCHAR(120) NOT NULL, unit_price INTEGER NOT NULL,
                     quantity INTEGER NOT NULL, subtotal INTEGER NOT NULL)""")
-                # Migrate older installations if necessary.
-                for col, ddl in [
-                    ("attendant", "VARCHAR(120) NOT NULL DEFAULT 'Vendedor'"),
-                    ("payment_method", "VARCHAR(20) NOT NULL DEFAULT 'Efectivo'"),
-                    ("register_id", "INTEGER"),
-                    ("archived", "BOOLEAN NOT NULL DEFAULT FALSE"),
-                ]:
-                    if col not in table_columns("sales"):
-                        cur.execute(f"ALTER TABLE sales ADD COLUMN {col} {ddl}")
+              # Migrate older installations if necessary.
+# IF NOT EXISTS evita que Render falle si la columna ya existe.
+cur.execute("""
+    ALTER TABLE sales
+    ADD COLUMN IF NOT EXISTS attendant
+    VARCHAR(120) NOT NULL DEFAULT 'Vendedor'
+""")
+
+cur.execute("""
+    ALTER TABLE sales
+    ADD COLUMN IF NOT EXISTS payment_method
+    VARCHAR(20) NOT NULL DEFAULT 'Efectivo'
+""")
+
+cur.execute("""
+    ALTER TABLE sales
+    ADD COLUMN IF NOT EXISTS register_id
+    INTEGER
+""")
+
+cur.execute("""
+    ALTER TABLE sales
+    ADD COLUMN IF NOT EXISTS archived
+    BOOLEAN NOT NULL DEFAULT FALSE
+""")
                 cur.execute("SELECT COUNT(*) FROM products")
                 if cur.fetchone()[0] == 0:
                     seed_products_pg(cur)
